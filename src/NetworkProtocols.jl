@@ -118,4 +118,17 @@ function decode_udp(data::Ptr{Nothing}, len::Integer)
     UDPPacket(h, data + 8, h.len - 8)
 end
 
+function dispatch_ethernet(visitor, data::Ptr{Nothing}, len::Integer)
+    ep = decode_ethernet(data, len)
+    if ep.header.ethertype == ETHERTYPE_IPV4
+        ipp = decode_ipv4(ep.payload, ep.payload_length)
+        if ipp.header.protocol == IPPROTOCOL_UDP
+            udpp = NetworkProtocols.decode_udp(ipp.payload, ipp.payload_length)
+            visitor(ep.header, ipp.header, udpp.header, udpp.payload, udpp.payload_length)
+        elseif ipp.header.protocol == IPPROTOCOL_TCP
+        elseif ipp.header.protocol == IPPROTOCOL_IGMP
+        end
+    end
+end
+
 end
