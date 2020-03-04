@@ -35,7 +35,7 @@ end
 # TODO: support various header types
 # TODO: read FCS, heuristically (not always in pcap)
 function decode_ethernet(data::Ptr{Nothing}, len::Integer)
-    h = Blob{EthernetHeader}(data, 0, len)[]
+    h = Blob{EthernetHeader}(data, 0, Int64(len))[]
     h = EthernetHeader(h.dst_mac, h.src_mac, bswap(h.ethertype))
     EthernetPacket(
         h,
@@ -80,7 +80,7 @@ struct IPv4Packet
 end
 
 function decode_ipv4(data::Ptr{Nothing}, len::Integer)
-    rh = Blob{IPv4HeaderRaw}(data, 0, Int(len))[]
+    rh = Blob{IPv4HeaderRaw}(data, 0, Int64(len))[]
     h = IPv4Header(
         (rh.version_ihl & 0x0f) * 4,
         rh.dscp_ecn >> 2,
@@ -109,7 +109,7 @@ struct UDPPacket
 end
 
 function decode_udp(data::Ptr{Nothing}, len::Integer)
-    h = Blob{UDPHeader}(data, 0, Int(len))[]
+    h = Blob{UDPHeader}(data, 0, Int64(len))[]
     h = UDPHeader(
         ntoh(h.src_port),
         ntoh(h.dst_port),
