@@ -1,7 +1,7 @@
 struct UDPHeader
     src_port::UInt16
     dst_port::UInt16
-    len::UInt16
+    length::UInt16
     checksum::UInt16
 end
 
@@ -18,7 +18,7 @@ function decode_udp(data::DenseVector{UInt8})
     h = UDPHeader(
         ntoh(h.src_port),
         ntoh(h.dst_port),
-        ntoh(h.len),
+        ntoh(h.length),
         ntoh(h.checksum))
-    UDPPacket(h, UnsafeArray{UInt8, 1}(p + 8, (Int(h.len - 8),)))
+    UDPPacket(h, UnsafeArray{UInt8, 1}(p + 8, (Int(h.length - 8),)))
 end
