@@ -3,7 +3,7 @@ struct MACAddress
 end
 
 function Base.show(io::IO, x::MACAddress)
-    @printf(io, "(%02x:%02x:%02x:%02x:%02x:%02x)", x.value...)
+    @printf(io, "%02x:%02x:%02x:%02x:%02x:%02x", x.value...)
 end
 
 isunicast(x::MACAddress) = (x.value[1] & 0x1) == 0
