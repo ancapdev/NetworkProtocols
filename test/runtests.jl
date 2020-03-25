@@ -2,5 +2,5 @@ using NetworkProtocols
 using Test
 
 @testset "NetworkProtocols.jl" begin
-    # Write your own tests here.
+    include("mac_address_tests.jl")
 end
