@@ -1,6 +1,12 @@
 module NetworkProtocols
 
+using Printf
 using Blobs
+
+export MACAddress
+export isunicast, ismulticast, isuniversal, islocal
+
+include("mac_address.jl")
 
 # TODO:
 # Link Layer:
@@ -16,12 +22,11 @@ using Blobs
 const ETHERTYPE_IPV4 = UInt16(0x0800)
 const ETHERTYPE_ARP  = UInt16(0x0806)
 
-const MacAddress = NTuple{6, UInt8}
 const IPv4Address = NTuple{4, UInt8}
 
 struct EthernetHeader
-    dst_mac::MacAddress
-    src_mac::MacAddress
+    dst_mac::MACAddress
+    src_mac::MACAddress
     ethertype::UInt16
 end
 
@@ -34,8 +39,8 @@ end
 # TODO: check minimum packet length
 # TODO: support various header types
 # TODO: read FCS, heuristically (not always in pcap)
-function decode_ethernet(data::Ptr{Nothing}, len::Integer)
-    h = Blob{EthernetHeader}(data, 0, Int64(len))[]
+function decode_ethernet(data::Ptr{UInt8}, len::Integer)
+    h = Blob{EthernetHeader}(convert(Ptr{Nothing}, data), 0, Int64(len))[]
     h = EthernetHeader(h.dst_mac, h.src_mac, bswap(h.ethertype))
     EthernetPacket(
         h,
