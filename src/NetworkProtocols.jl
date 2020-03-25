@@ -8,7 +8,7 @@ export isunicast, ismulticast, isuniversal, islocal
 
 export EthernetHeader, EthernetPacket
 export ETHERTYPE_IPV4, ETHERTYPE_ARP
-export decode_ethernet
+export decode_ethernet, ethertype_string
 
 export IPv4Address, IPv4Header, IPv4Packet
 export IPPROTOCOL_IGMP, IPPROTOCOL_TCP, IPPROTOCOL_UDP

@@ -4,7 +4,7 @@ const ETHERTYPE_ARP  = UInt16(0x0806)
 
 function ethertype_string(x::UInt16)
     x == ETHERTYPE_IPV4 && return @sprintf("IPv4(%04x)", x)
-    x == ETHERTYPE_ARP && return @sprintf("ARP(%0x4x)", x)
+    x == ETHERTYPE_ARP && return @sprintf("ARP(%04x)", x)
     @sprintf("Unknown(%04x)", x)
 end
 
