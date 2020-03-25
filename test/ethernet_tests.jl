@@ -1,4 +1,4 @@
-@testset "ethernet" begin
+@testset "Ethernet" begin
 
 @testset "IO" begin
     @test ethertype_string(ETHERTYPE_IPV4) == "IPv4(0800)"

@@ -2,6 +2,9 @@ struct IPv4Address
     value::NTuple{4, UInt8}
 end
 
+IPv4Address(a1::Integer, a2::Integer, a3::Integer, a4::Integer) =
+    IPv4Address((UInt8(a1), UInt8(a2), UInt8(a3), UInt8(a4)))
+
 Base.show(io::IO, x::IPv4Address) = print(io, join(string.(Int.(x.value)), '.'))
 
 struct IPv4HeaderRaw
