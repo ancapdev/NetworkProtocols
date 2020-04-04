@@ -1,12 +1,3 @@
-struct IPv4Address
-    value::NTuple{4, UInt8}
-end
-
-IPv4Address(a1::Integer, a2::Integer, a3::Integer, a4::Integer) =
-    IPv4Address((UInt8(a1), UInt8(a2), UInt8(a3), UInt8(a4)))
-
-Base.show(io::IO, x::IPv4Address) = print(io, join(string.(Int.(x.value)), '.'))
-
 struct IPv4HeaderRaw
     version_ihl::UInt8
     dscp_ecn::UInt8
@@ -16,8 +7,8 @@ struct IPv4HeaderRaw
     ttl::UInt8
     protocol::UInt8
     header_checksum::UInt16
-    src_ip::IPv4Address
-    dst_ip::IPv4Address
+    src_ip::UInt32
+    dst_ip::UInt32
 end
 
 const IPPROTOCOL_IGMP = UInt8(0x02)
@@ -33,8 +24,8 @@ struct IPv4Header
     fragment_offset::UInt16
     ttl::UInt8
     protocol::UInt8
-    src_ip::IPv4Address
-    dst_ip::IPv4Address
+    src_ip::IPv4
+    dst_ip::IPv4
 end
 
 struct IPv4Packet
@@ -56,8 +47,8 @@ function decode_ipv4(data::DenseVector{UInt8})
         (ntoh(rh.flags_fragmentoffset) & 0x1fff) * 8,
         rh.ttl,
         rh.protocol,
-        rh.src_ip,
-        rh.dst_ip)
+        IPv4(ntoh(rh.src_ip)),
+        IPv4(ntoh(rh.dst_ip)))
     IPv4Packet(
         h,
         UnsafeArray{UInt8, 1}(

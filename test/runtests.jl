@@ -1,4 +1,5 @@
 using NetworkProtocols
+using Sockets
 using Test
 
 include("test_data.jl")
