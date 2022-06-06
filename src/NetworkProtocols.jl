@@ -1,6 +1,5 @@
 module NetworkProtocols
 
-import FunctionWrappers.FunctionWrapper
 using Printf
 using Sockets
 using UnsafeArrays
@@ -16,9 +15,7 @@ export IPv4Header, IPv4Packet
 export IPPROTOCOL_IGMP, IPPROTOCOL_TCP, IPPROTOCOL_UDP
 export decode_ipv4
 
-export TCPHeader, TCPPacket, TCPStream, TCPEvent, tcpstreamid
-export TCPEvent, TCPE_OPEN, TCPE_CONNECTED, TCPE_CLOSE, TCPE_DISCONNECTED, TCPE_ERROR, TCPE_RETRANSMIT
-
+export TCPHeader, TCPPacket
 export UDPHeader, UDPPacket
 export decode_tcp, decode_udp
 
@@ -30,5 +27,16 @@ include("ip.jl")
 include("tcp.jl")
 include("udp.jl")
 include("dispatch.jl")
+
+module Experimental
+    import FunctionWrappers.FunctionWrapper
+    using Sockets
+    using ..NetworkProtocols
+
+    export TCPStream, tcpstreamid
+    export TCPEvent, TCPE_OPEN, TCPE_CONNECTED, TCPE_CLOSE, TCPE_DISCONNECTED, TCPE_ERROR, TCPE_RETRANSMIT
+
+    include("experimental/tcp_stream.jl")
+end
 
 end
