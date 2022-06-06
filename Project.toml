@@ -1,14 +1,16 @@
 name = "NetworkProtocols"
 uuid = "cc8e9863-198f-4c11-8208-8a22403099d5"
 authors = ["Christian Rorvik <christian.rorvik@gmail.com>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
+FunctionWrappers = "069b7b12-0de2-55c6-9aab-29f3d0a68a2e"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 UnsafeArrays = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
 
 [compat]
+FunctionWrappers = "1"
 UnsafeArrays = "1"
 julia = "1"
 
