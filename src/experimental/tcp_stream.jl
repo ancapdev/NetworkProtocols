@@ -78,9 +78,15 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
 
     if theader.SYN
         if src_endpoint.seq !== nothing
-            @error "Seq set before SYN" src_endpoint dst_endpoint iheader packet
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
-            return
+            if src_endpoint.seq != theader.seq_num + 1
+                @error "Seq set before SYN" src_endpoint dst_endpoint iheader packet
+                stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
+                return
+            else
+                @warn "TCP retransmission" src_endpoint dst_endpoint iheader packet
+                stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_RETRANSMIT)
+                return
+            end
         end
         src_endpoint.seq = theader.seq_num + 1
         if theader.ACK
