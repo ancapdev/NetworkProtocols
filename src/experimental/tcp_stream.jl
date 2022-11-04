@@ -142,6 +142,7 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
             stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
             return
         elseif theader.seq_num < src_endpoint.seq
+            isempty(packet.payload) && return
             @warn "TCP retransmission" src_endpoint dst_endpoint iheader packet
             stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_RETRANSMIT)
             if theader.seq_num + length(packet.payload) != src_endpoint.seq
