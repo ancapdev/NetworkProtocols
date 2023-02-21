@@ -34,17 +34,21 @@ end
 end
 
 # TODO deal with ip fragmentation
-const TCPHandler = FunctionWrapper{Nothing, Tuple{Sockets.InetAddr{IPv4}, Sockets.InetAddr{IPv4}, Union{TCPEvent, TCPPacket}}}
+const TCPEventHandler = FunctionWrapper{Nothing, Tuple{Sockets.InetAddr{IPv4}, Sockets.InetAddr{IPv4}, TCPEvent}}
+const TCPPacketHandler = FunctionWrapper{Nothing, Tuple{Sockets.InetAddr{IPv4}, Sockets.InetAddr{IPv4}, TCPPacket}}
+
 mutable struct TCPStream
     endpoint1::TCPStreamEndpoint
     endpoint2::TCPStreamEndpoint
-    handler::TCPHandler
+    event_handler::TCPEventHandler
+    packet_handler::TCPPacketHandler
 
     function TCPStream(handler, src::Sockets.InetAddr{IPv4}, dst::Sockets.InetAddr{IPv4})
         new(
             TCPStreamEndpoint(src, nothing, nothing, false),
             TCPStreamEndpoint(dst, nothing, nothing, false),
-            TCPHandler(handler),
+            TCPEventHandler(handler),
+            TCPPacketHandler(handler),
         )
     end
 end
@@ -72,7 +76,7 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
 
     if theader.RST
         @assert !theader.SYN
-        stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_DISCONNECTED)
+        stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_DISCONNECTED)
         return
     end
 
@@ -80,11 +84,11 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
         if src_endpoint.seq !== nothing
             if src_endpoint.seq != theader.seq_num + 1
                 @error "Seq set before SYN" src_endpoint dst_endpoint iheader packet
-                stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
+                stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
                 return
             else
                 @warn "TCP retransmission" src_endpoint dst_endpoint iheader packet
-                stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_RETRANSMIT)
+                stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_RETRANSMIT)
                 return
             end
         end
@@ -93,30 +97,30 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
             src_endpoint.ack !== nothing && @error "Ack set before SYN" src_endpoint dst_endpoint iheader packet
             if dst_endpoint.seq === nothing
                 @error "SYN-ACK was not preceded by SYN" src_endpoint dst_endpoint iheader packet
-                stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
+                stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
                 return
             elseif dst_endpoint.seq != theader.ack_num
                 @error "SYN-ACK with unexpected ack_num" src_endpoint dst_endpoint iheader packet
-                stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
+                stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
                 return
             else
                 @debug "SYN-ACK received" src_endpoint dst_endpoint iheader packet
             end
             src_endpoint.ack = theader.ack_num
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_CONNECTED)
+            stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_CONNECTED)
         else
             @debug "SYN received" src_endpoint dst_endpoint iheader packet
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_OPEN)
+            stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_OPEN)
         end
     elseif theader.FIN
         if !isempty(packet.payload)
             @error "TCP FIN packet with non-empty payload" src_endpoint dst_endpoint iheader packet
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
+            stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
             return
         end
         if src_endpoint.fin_sent
             @error "TCP double FIN" src_endpoint dst_endpoint iheader packet
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
+            stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
             return
         end
 
@@ -124,30 +128,30 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
         src_endpoint.ack = theader.ack_num
         src_endpoint.seq = theader.seq_num + 1
         if dst_endpoint.fin_sent
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_DISCONNECTED)
+            stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_DISCONNECTED)
         else
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_CLOSE)
+            stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_CLOSE)
         end
     else
         @assert theader.ACK
         if src_endpoint.seq === nothing || dst_endpoint.seq === nothing || dst_endpoint.ack === nothing
             @error "TCP stream init missed" src_endpoint dst_endpoint iheader packet
             # NOTE: We've seen this connection mid-way, we don't support this at this point
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
+            stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
             return
         end
 
         if theader.seq_num > src_endpoint.seq
             @error "TCP stream seq gap" src_endpoint dst_endpoint iheader packet
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
+            stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
             return
         elseif theader.seq_num < src_endpoint.seq
             isempty(packet.payload) && return
             @warn "TCP retransmission" src_endpoint dst_endpoint iheader packet
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_RETRANSMIT)
+            stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_RETRANSMIT)
             if theader.seq_num + length(packet.payload) != src_endpoint.seq
                 @error "TCP retransmission with different data length" src_endpoint dst_endpoint iheader packet
-                stream.handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
+                stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
             end
             return
         end
@@ -159,7 +163,7 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
         src_endpoint.seq = theader.seq_num + length(packet.payload)
 
         if !isempty(packet.payload)
-            stream.handler(src_endpoint.addr, dst_endpoint.addr, packet)
+            stream.packet_handler(src_endpoint.addr, dst_endpoint.addr, packet)
         end
     end
     nothing
