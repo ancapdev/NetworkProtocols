@@ -36,6 +36,7 @@ end
 # TODO deal with ip fragmentation
 const TCPEventHandler = FunctionWrapper{Nothing, Tuple{Sockets.InetAddr{IPv4}, Sockets.InetAddr{IPv4}, TCPEvent}}
 const TCPPacketHandler = FunctionWrapper{Nothing, Tuple{Sockets.InetAddr{IPv4}, Sockets.InetAddr{IPv4}, TCPPacket}}
+
 mutable struct TCPStream
     endpoint1::TCPStreamEndpoint
     endpoint2::TCPStreamEndpoint
