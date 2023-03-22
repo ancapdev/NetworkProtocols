@@ -82,7 +82,7 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
 
     if theader.SYN
         if src_endpoint.seq !== nothing
-            if src_endpoint.seq != theader.seq_num + 1
+            if src_endpoint.seq != (theader.seq_num + 1) % UInt32
                 @error "Seq set before SYN" src_endpoint dst_endpoint iheader packet
                 stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
                 return
@@ -92,7 +92,7 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
                 return
             end
         end
-        src_endpoint.seq = theader.seq_num + 1
+        src_endpoint.seq = (theader.seq_num + 1) % UInt32
         if theader.ACK
             src_endpoint.ack !== nothing && @error "Ack set before SYN" src_endpoint dst_endpoint iheader packet
             if dst_endpoint.seq === nothing
@@ -126,7 +126,7 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
 
         src_endpoint.fin_sent = true
         src_endpoint.ack = theader.ack_num
-        src_endpoint.seq = theader.seq_num + 1
+        src_endpoint.seq = (theader.seq_num + 1) % UInt32
         if dst_endpoint.fin_sent
             stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_DISCONNECTED)
         else
@@ -149,7 +149,7 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
             isempty(packet.payload) && return
             @warn "TCP retransmission" src_endpoint dst_endpoint iheader packet
             stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_RETRANSMIT)
-            if theader.seq_num + length(packet.payload) != src_endpoint.seq
+            if (theader.seq_num + length(packet.payload)) % UInt32 != src_endpoint.seq
                 @error "TCP retransmission with different data length" src_endpoint dst_endpoint iheader packet
                 stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
             end
@@ -160,7 +160,7 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
             @debug "TCP connection initialised" src_endpoint dst_endpoint
         end
         src_endpoint.ack = theader.ack_num
-        src_endpoint.seq = theader.seq_num + length(packet.payload)
+        src_endpoint.seq = (theader.seq_num + length(packet.payload)) % UInt32
 
         if !isempty(packet.payload)
             stream.packet_handler(src_endpoint.addr, dst_endpoint.addr, packet)
