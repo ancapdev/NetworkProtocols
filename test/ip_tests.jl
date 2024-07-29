@@ -17,12 +17,8 @@
 end
 
 @testset "ismulticast" begin
-    ep = decode_ethernet(multicast_packet)
-    ipp = decode_ipv4(ep.payload)
-    @test ismulticast(ipp.header.dst_ip)
+    @test all(ismulticast(addr) for addr in multicast_addresses)
+    @test all(!ismulticast(addr) for addr in non_multicast_addresses)
+end
 
-    epdns = decode_ethernet(dns_packet)
-    ippdns = decode_ipv4(epdns.payload)
-    @test !ismulticast(ippdns.header.dst_ip)
-    end
 end
