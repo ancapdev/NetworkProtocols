@@ -19,7 +19,7 @@ end
 @testset "ismulticast" begin
     ep = decode_ethernet(multicast_packet)
     ipp = decode_ipv4(ep.payload)
-    @test ismulticast(ipp.header.dst_ip) == true
+    @test ismulticast(ipp.header.dst_ip)
 
     epdns = decode_ethernet(dns_packet)
     ippdns = decode_ipv4(epdns.payload)
