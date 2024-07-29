@@ -23,6 +23,6 @@ end
 
     epdns = decode_ethernet(dns_packet)
     ippdns = decode_ipv4(epdns.payload)
-    @test ismulticast(ippdns.header.dst_ip) == false
+    @test !ismulticast(ippdns.header.dst_ip)
     end
 end
