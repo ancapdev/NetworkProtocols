@@ -1,7 +1,7 @@
 name = "NetworkProtocols"
 uuid = "cc8e9863-198f-4c11-8208-8a22403099d5"
 authors = ["Christian Rorvik <christian.rorvik@gmail.com>"]
-version = "0.2.5"
+version = "0.3.5"
 
 [deps]
 FunctionWrappers = "069b7b12-0de2-55c6-9aab-29f3d0a68a2e"

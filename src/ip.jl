@@ -55,3 +55,7 @@ function decode_ipv4(data::DenseVector{UInt8})
             p + h.header_length,
             (Int(h.total_length - h.header_length),)))
 end
+
+function ismulticast(ip::IPAddr)
+    ip"224.0.0.0" <= ip <= ip"239.255.255.255"
+end
