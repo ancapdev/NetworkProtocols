@@ -16,4 +16,9 @@
     @test length(ipp.payload) == 48
 end
 
+@testset "ismulticast" begin
+    @test all(ismulticast(addr) for addr in multicast_addresses)
+    @test all(!ismulticast(addr) for addr in non_multicast_addresses)
+end
+
 end

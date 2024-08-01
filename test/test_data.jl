@@ -7,3 +7,16 @@ const dns_packet = [
     0x02, 0x63, 0x73, 0x05, 0x6d, 0x69, 0x61, 0x6d, 0x69, 0x03, 0x65, 0x64, 0x75, 0x00, 0x00, 0x01,
     0x00, 0x01
 ]
+
+const multicast_addresses = [
+    ip"224.0.0.0",
+    ip"224.0.0.10",
+    ip"224.0.10.20",
+    ip"239.255.255.255"
+]
+
+const non_multicast_addresses = [
+    ip"127.0.0.1",
+    ip"10.0.0.10",
+    ip"192.168.0.1"
+]
