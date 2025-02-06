@@ -149,10 +149,6 @@ function Base.push!(stream::TCPStream, iheader::IPv4Header, packet::TCPPacket)
             isempty(packet.payload) && return
             @warn "TCP retransmission" src_endpoint dst_endpoint iheader packet
             stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_RETRANSMIT)
-            if (theader.seq_num + length(packet.payload)) % UInt32 != src_endpoint.seq
-                @error "TCP retransmission with different data length" src_endpoint dst_endpoint iheader packet
-                stream.event_handler(src_endpoint.addr, dst_endpoint.addr, TCPE_ERROR)
-            end
             return
         end
 
